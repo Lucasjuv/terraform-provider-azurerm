@@ -27,6 +27,7 @@ import (
 	arckubernetes "github.com/hashicorp/terraform-provider-azurerm/internal/services/arckubernetes/client"
 	attestation "github.com/hashicorp/terraform-provider-azurerm/internal/services/attestation/client"
 	authorization "github.com/hashicorp/terraform-provider-azurerm/internal/services/authorization/client"
+	automanage "github.com/hashicorp/terraform-provider-azurerm/internal/services/automanage/client"
 	automation "github.com/hashicorp/terraform-provider-azurerm/internal/services/automation/client"
 	azureStackHCI "github.com/hashicorp/terraform-provider-azurerm/internal/services/azurestackhci/client"
 	batch "github.com/hashicorp/terraform-provider-azurerm/internal/services/batch/client"
@@ -84,6 +85,7 @@ import (
 	machinelearning "github.com/hashicorp/terraform-provider-azurerm/internal/services/machinelearning/client"
 	maintenance "github.com/hashicorp/terraform-provider-azurerm/internal/services/maintenance/client"
 	managedapplication "github.com/hashicorp/terraform-provider-azurerm/internal/services/managedapplications/client"
+	managedidentity "github.com/hashicorp/terraform-provider-azurerm/internal/services/managedidentity/client"
 	managementgroup "github.com/hashicorp/terraform-provider-azurerm/internal/services/managementgroup/client"
 	maps "github.com/hashicorp/terraform-provider-azurerm/internal/services/maps/client"
 	mariadb "github.com/hashicorp/terraform-provider-azurerm/internal/services/mariadb/client"
@@ -153,6 +155,7 @@ type Client struct {
 	ArcKubernetes         *arckubernetes.Client
 	Attestation           *attestation.Client
 	Authorization         *authorization.Client
+	Automanage            *automanage.Client
 	Automation            *automation.Client
 	AzureStackHCI         *azurestackhci_v2022_12_01.Client
 	Batch                 *batch.Client
@@ -210,6 +213,8 @@ type Client struct {
 	MachineLearning       *machinelearning.Client
 	Maintenance           *maintenance.Client
 	ManagedApplication    *managedapplication.Client
+	// @stephybun: temporary and manual definition of ManagedIdentity Client to make upstream changes in Pandora's generator-terraform
+	ManagedIdentityManual *managedidentity.Client
 	ManagementGroups      *managementgroup.Client
 	Maps                  *maps.Client
 	MariaDB               *mariadb.Client
@@ -295,6 +300,7 @@ func (client *Client) Build(ctx context.Context, o *common.ClientOptions) error 
 		return fmt.Errorf("building clients for Attestation: %+v", err)
 	}
 	client.Authorization = authorization.NewClient(o)
+	client.Automanage = automanage.NewClient(o)
 	client.Automation = automation.NewClient(o)
 	client.AzureStackHCI = azureStackHCI.NewClient(o)
 	if client.Batch, err = batch.NewClient(o); err != nil {
@@ -392,6 +398,9 @@ func (client *Client) Build(ctx context.Context, o *common.ClientOptions) error 
 	client.MachineLearning = machinelearning.NewClient(o)
 	client.Maintenance = maintenance.NewClient(o)
 	client.ManagedApplication = managedapplication.NewClient(o)
+	if client.ManagedIdentityManual, err = managedidentity.NewManagedIdentityClient(o); err != nil {
+		return fmt.Errorf("building clients for ManagedIdentity: %+v", err)
+	}
 	client.ManagementGroups = managementgroup.NewClient(o)
 	if client.Maps, err = maps.NewClient(o); err != nil {
 		return fmt.Errorf("building clients for Maps: %+v", err)
@@ -415,7 +424,9 @@ func (client *Client) Build(ctx context.Context, o *common.ClientOptions) error 
 	}
 	client.NotificationHubs = notificationhub.NewClient(o)
 	client.Orbital = orbital.NewClient(o)
-	client.Policy = policy.NewClient(o)
+	if client.Policy, err = policy.NewClient(o); err != nil {
+		return fmt.Errorf("building clients for Policy: %+v", err)
+	}
 	if client.Portal, err = portal.NewClient(o); err != nil {
 		return fmt.Errorf("building clients for Portal: %+v", err)
 	}

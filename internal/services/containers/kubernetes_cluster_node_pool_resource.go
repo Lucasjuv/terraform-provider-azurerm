@@ -133,9 +133,9 @@ func resourceKubernetesClusterNodePool() *pluginsdk.Resource {
 				}, false),
 			},
 
-			"kubelet_config": schemaNodePoolKubeletConfig(),
+			"kubelet_config": schemaNodePoolKubeletConfigForceNew(),
 
-			"linux_os_config": schemaNodePoolLinuxOSConfig(),
+			"linux_os_config": schemaNodePoolLinuxOSConfigForceNew(),
 
 			"fips_enabled": {
 				Type:     pluginsdk.TypeBool,
@@ -694,7 +694,7 @@ func resourceKubernetesClusterNodePoolUpdate(d *pluginsdk.ResourceData, meta int
 		if err != nil {
 			return fmt.Errorf("retrieving Node Pool %s: %+v", *id, err)
 		}
-		if existingNodePool := existingNodePoolResp.Model; existingNodePool != nil {
+		if existingNodePool := existingNodePoolResp.Model; existingNodePool != nil && existingNodePool.Properties != nil {
 			orchestratorVersion := d.Get("orchestrator_version").(string)
 			currentOrchestratorVersion := ""
 			if v := existingNodePool.Properties.CurrentOrchestratorVersion; v != nil {
